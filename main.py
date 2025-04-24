@@ -1,151 +1,112 @@
-# Banking System
+import tkinter as tk
 
+# --- Banking System Logic ---
+class BankingSystem:
+    def __init__(self):
+        self.accounts = {
+            '123456': {'pin': '1234', 'name': 'Alice', 'balance': 1000.0},
+            '654321': {'pin': '4321', 'name': 'Bob', 'balance': 500.0}
+        }
+        self.current_user = None
 
-accounts = {
-    '123456': {'pin': '1234', 'name': 'Alice', 'balance': 1000.0},
-    '654321': {'pin': '4321', 'name': 'Bob', 'balance': 500.0}
-}
-
-current_user = None
-
-def login():
-    global current_user
-    print("\n=== Banking System Login ===")
-    acc_num = input("Enter your account number: ")
-    pin = input("Enter your PIN: ")
-
-    if acc_num in accounts and accounts[acc_num]['pin'] == pin:
-        current_user = acc_num
-        print(f"\nLogin successful. Welcome, {accounts[acc_num]['name']}!")
-        main_menu()
-    else:
-        print("Invalid account number or PIN.\n")
-
-def check_balance():
-    balance = accounts[current_user]['balance']
-    print(f"\nYour current balance is: ${balance}\n")
-
-def deposit():
-    try:
-        amount = float(input("Enter amount to deposit: $"))
-        if amount > 0:
-            accounts[current_user]['balance'] += amount
-            print(f"${amount} deposited successfully.\n")
+    def login(self, acc_num, pin):
+        if acc_num in self.accounts and self.accounts[acc_num]['pin'] == pin:
+            self.current_user = acc_num
+            return f"Welcome, {self.accounts[acc_num]['name']}!"
         else:
-            print("Amount must be positive.\n")
-    except ValueError:
-        print("Invalid input. Please enter a number.\n")
+            return "Invalid account number or PIN."
 
-def withdraw():
-    try:
-        amount = float(input("Enter amount to withdraw: $"))
-        if 0 < amount <= accounts[current_user]['balance']:
-            accounts[current_user]['balance'] -= amount
-            print(f"${amount} withdrawn successfully.\n")
-        else:
-            print("Insufficient balance or invalid amount.\n")
-    except ValueError:
-        print("Please enter a valid number.\n")
+    def check_balance(self):
+        if self.current_user:
+            return f"Your balance is: ${self.accounts[self.current_user]['balance']:.2f}"
+        return "Please log in first."
 
-def edit_account():
-    print("\nWhat would you like to update?")
-    print("1. Name")
-    print("2. PIN")
-    choice = input("Choose an option (1 or 2): ")
+    def deposit(self, amount):
+        if self.current_user and amount > 0:
+            self.accounts[self.current_user]['balance'] += amount
+            return f"${amount} deposited."
+        return "Invalid amount or not logged in."
 
-    if choice == '1':
-        new_name = input("Enter your new name: ")
-        accounts[current_user]['name'] = new_name
-        print("Name updated successfully.\n")
-    elif choice == '2':
-        new_pin = input("Enter your new 4-digit PIN: ")
-        if len(new_pin) == 4 and new_pin.isdigit():
-            accounts[current_user]['pin'] = new_pin
-            print("PIN updated successfully.\n")
-        else:
-            print("PIN must be 4 digits.\n")
-    else:
-        print("Invalid option.\n")
+    def withdraw(self, amount):
+        if self.current_user:
+            if 0 < amount <= self.accounts[self.current_user]['balance']:
+                self.accounts[self.current_user]['balance'] -= amount
+                return f"${amount} withdrawn."
+            else:
+                return "Insufficient balance or invalid amount."
+        return "Please log in first."
 
-def close_account():
-    global current_user
-    confirm = input("Are you sure you want to close your account? (yes/no): ").lower()
-    if confirm == 'yes':
-        del accounts[current_user]
-        print("Account closed successfully.\n")
-        current_user = None
-    else:
-        print("Account closure canceled.\n")
 
-def logout():
-    global current_user
-    print(f"\nLogging out {accounts[current_user]['name']}...\n")
-    current_user = None
+# --- GUI Setup ---
+bank = BankingSystem()
+root = tk.Tk()
+root.title("Elite 102 Banking System")
 
-def create_account():
-    print("\n=== Create New Account ===")
-    acc_num = input("Enter a new account number: ")
-    if acc_num in accounts:
-        print("Account number already exists.\n")
-        return
+# --- Login Section ---
+tk.Label(root, text="Account Number:").grid(row=0, column=0)
+account_entry = tk.Entry(root)
+account_entry.grid(row=0, column=1)
 
-    name = input("Enter your name: ")
-    pin = input("Set a 4-digit PIN: ")
-    try:
-        balance = float(input("Initial deposit amount: $"))
-    except ValueError:
-        print("Invalid deposit amount.\n")
-        return
+tk.Label(root, text="PIN:").grid(row=1, column=0)
+pin_entry = tk.Entry(root, show="*")
+pin_entry.grid(row=1, column=1)
 
-    if len(pin) == 4 and pin.isdigit() and balance >= 0:
-        accounts[acc_num] = {'name': name, 'pin': pin, 'balance': balance}
-        print("Account created successfully!\n")
-    else:
-        print("Invalid PIN or balance.\n")
+result_label = tk.Label(root, text="", fg="blue")
+result_label.grid(row=2, column=0, columnspan=2)
 
-def main_menu():
-    while current_user:
-        print("\n--- Main Menu ---")
-        print("1. Check Balance")
-        print("2. Deposit")
-        print("3. Withdraw")
-        print("4. Edit Account")
-        print("5. Close Account")
-        print("6. Logout")
-        choice = input("Choose an option (1-6): ")
+def try_login():
+    acc = account_entry.get()
+    pin = pin_entry.get()
+    message = bank.login(acc, pin)
+    result_label.config(text=message)
+    if "Welcome" in message:
+        show_main_menu()
 
-        if choice == '1':
-            check_balance()
-        elif choice == '2':
-            deposit()
-        elif choice == '3':
-            withdraw()
-        elif choice == '4':
-            edit_account()
-        elif choice == '5':
-            close_account()
-        elif choice == '6':
-            logout()
-        else:
-            print("Invalid option. Try again.\n")
+tk.Button(root, text="Login", command=try_login).grid(row=3, column=0, columnspan=2)
 
-def home():
-    while True:
-        print("=== Welcome to the Banking System ===")
-        print("1. Login")
-        print("2. Create New Account")
-        print("3. Exit")
-        choice = input("Choose an option (1-3): ")
+# --- Banking Actions ---
+def show_main_menu():
+    # Hide login widgets
+    account_entry.grid_remove()
+    pin_entry.grid_remove()
+    for widget in root.grid_slaves(row=0):
+        widget.grid_remove()
+    for widget in root.grid_slaves(row=1):
+        widget.grid_remove()
+    for widget in root.grid_slaves(row=3):
+        widget.grid_remove()
 
-        if choice == '1':
-            login()
-        elif choice == '2':
-            create_account()
-        elif choice == '3':
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid option. Try again.\n")
+    # Entry for amount
+    tk.Label(root, text="Amount:").grid(row=4, column=0)
+    amount_entry = tk.Entry(root)
+    amount_entry.grid(row=4, column=1)
 
-# Start the Banking System
-home()
+    # Functions for actions
+    def do_deposit():
+        try:
+            amt = float(amount_entry.get())
+            result = bank.deposit(amt)
+            result_label.config(text=result)
+        except ValueError:
+            result_label.config(text="Enter a valid number.")
+
+    def do_withdraw():
+        try:
+            amt = float(amount_entry.get())
+            result = bank.withdraw(amt)
+            result_label.config(text=result)
+        except ValueError:
+            result_label.config(text="Enter a valid number.")
+
+    def do_balance():
+        result = bank.check_balance()
+        result_label.config(text=result)
+
+    # Buttons for actions
+    tk.Button(root, text="Check Balance", command=do_balance).grid(row=5, column=0, columnspan=2)
+    tk.Button(root, text="Deposit", command=do_deposit).grid(row=6, column=0)
+    tk.Button(root, text="Withdraw", command=do_withdraw).grid(row=6, column=1)
+    tk.Button(root, text="Exit", command=root.quit).grid(row=7, column=0, columnspan=2)
+
+# --- Run the App ---
+root.mainloop()
